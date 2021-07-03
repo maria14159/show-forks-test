@@ -9,6 +9,7 @@
           this.page = newPage;
         }
       "
+      :is-fake="false"
     ></Search>
     <table class="container table mt-4 table-light table-sm">
       <thead>

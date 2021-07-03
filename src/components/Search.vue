@@ -47,6 +47,10 @@ export default Vue.extend({
       type: Number,
       default: 1,
     },
+    isFake: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -81,9 +85,10 @@ export default Vue.extend({
         .catch(() => {});
     },
     async search() {
+      this.updateRoute();
+      if (this.isFake) return;
       const info: ForkTypes[] = [];
       try {
-        this.updateRoute();
         const forks = (
           await axios.get(
             `${this.url}${this.inpVal}/forks?per_page=${this.size}&page=${this.page}`
@@ -97,10 +102,10 @@ export default Vue.extend({
             star_count: fork.stargazers_count,
           });
         });
+        this.$emit("show-forks", info);
       } catch (e) {
-        alert(e);
+        alert("Неправильно введенные данные");
       }
-      this.$emit("show-forks", info);
     },
   },
   watch: {
