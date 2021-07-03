@@ -8,9 +8,9 @@
       aria-label="Input group example"
       aria-describedby="basic-addon1"
       v-model="inpVal"
-      @keypress.enter="search"
+      @keypress.enter="btnClick"
     />
-    <button type="button" class="btn btn-primary" @click="search">
+    <button type="button" class="btn btn-primary" @click="btnClick">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -35,79 +35,87 @@ import { ForkTypes } from "ObjTypes/ObjTypes";
 
 export default Vue.extend({
   props: {
-    inpVal: String,
     url: {
       type: String,
       default: "https://api.github.com/repos/",
     },
+    size: {
+      type: Number,
+      default: 10,
+    },
+    page: {
+      type: Number,
+      default: 1,
+    },
+  },
+  data() {
+    return {
+      inpVal: "",
+    };
+  },
+  mounted() {
+    this.inpVal = this.$route.query.repository as string;
+    if (this.inpVal && this.$route.query.page) {
+      this.$emit("set-page", Number.parseInt(this.$route.query.page as string));
+      this.search();
+    }
   },
   methods: {
+    btnClick(): void {
+      if (
+        Number.parseInt(this.$route.query.page as string) == 1 ||
+        this.$route.query.page === undefined
+      ) {
+        this.search();
+      } else {
+        this.$emit("set-page", 1);
+      }
+    },
+    updateRoute(): void {
+      this.$router
+        .push({
+          name: "Results",
+          query: { repository: this.inpVal, page: this.page.toString() },
+        })
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        .catch(() => {});
+    },
     async search() {
       const info: ForkTypes[] = [];
       try {
-        const forks = (await axios.get(`${this.url}${this.inpVal}/forks`)).data;
-
+        this.updateRoute();
+        const forks = (
+          await axios.get(
+            `${this.url}${this.inpVal}/forks?per_page=${this.size}&page=${this.page}`
+          )
+        ).data;
         forks.forEach((fork: any): void => {
           info.push({
-            full_name: fork.full_name,
             owner: fork.owner.login,
-            star_count: fork.stargazers_count,
+            full_name: fork.full_name,
             url: fork.html_url,
+            star_count: fork.stargazers_count,
           });
         });
-        console.log(info);
       } catch (e) {
         alert(e);
       }
       this.$emit("show-forks", info);
     },
   },
+  watch: {
+    page() {
+      this.search();
+    },
+    $route() {
+      if (this.$route.query.repository && this.$route.query.page) {
+        this.inpVal = this.$route.query.repository as string;
+        this.$emit(
+          "set-page",
+          Number.parseInt(this.$route.query.page as string)
+        );
+      }
+    },
+  },
 });
 </script>
-
-<!--<script>-->
-<!--import Vue from "vue";-->
-
-<!--const Search = Vue.extend({-->
-<!--  data() {-->
-<!--    return {-->
-<!--      inpVal,-->
-<!--    };-->
-<!--  },-->
-<!--  methods: {-->
-<!--    // необходима аннотация из-за `this` в возвращаемом типе-->
-<!--    greet(): string {-->
-<!--      return this.msg + ", мир";-->
-<!--    },-->
-<!--  },-->
-<!--  computed: {-->
-<!--    // необходима аннотация-->
-<!--    greeting(): string {-->
-<!--      return this.greet() + "!";-->
-<!--    },-->
-<!--  },-->
-<!--});-->
-<!--</script>-->
-
-<!--<script>-->
-<!--export default {-->
-<!--  name: "Search",-->
-<!--  data(){-->
-
-<!--  },-->
-<!--  methods: {-->
-<!--    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types-->
-<!--    search(inpVal) {-->
-<!--      console.log(inpVal);-->
-<!--    },-->
-<!--  },-->
-<!--};-->
-<!--</script>-->
-<!--<script>-->
-<!--import { Component, Prop, Vue } from "vue-property-decorator";-->
-<!--@Component-->
-<!--export default class Search extends Vue {-->
-<!--  // @Prop()  inpVal!: string;-->
-<!--  str = "jggh";-->
-<!--}-->
-<!--</script>-->

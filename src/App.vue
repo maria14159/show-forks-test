@@ -2,7 +2,7 @@
   <div id="app">
     <div class="fw-bold">
       <router-link class="link-dark" to="/">Welcome</router-link> |
-      <router-link class="link-dark" to="/results">Search results</router-link>
+      <router-link class="link-dark" to="/search">Search results</router-link>
     </div>
     <router-view />
   </div>

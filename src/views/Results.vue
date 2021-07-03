@@ -1,7 +1,15 @@
 <template>
   <div class="my-3">
     <h5 class="fw-bold">Результаты</h5>
-    <Search v-on:show-forks="showForks"></Search>
+    <Search
+      @show-forks="showForks"
+      :page="page"
+      @set-page="
+        (newPage) => {
+          this.page = newPage;
+        }
+      "
+    ></Search>
     <table class="container table mt-4 table-light table-sm">
       <thead>
         <tr>
@@ -73,7 +81,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="fork in paginatedData" v-bind:key="fork.full_name">
+        <tr v-for="fork in forks" v-bind:key="fork.full_name">
           <td class="text-start">{{ fork.owner }}</td>
           <td class="text-start">{{ fork.full_name }}</td>
           <td class="text-start">
@@ -85,18 +93,15 @@
         </tr>
       </tbody>
     </table>
-    <div class="container">
-      <button class="page-item" :disabled="page == 0" @click="prevPage">
-        &laquo;
+    <div class="container d-flex">
+      <button
+        :disabled="isPrevButtonDisabled"
+        class="btn btn-primary"
+        @click="prevPage"
+      >
+        &laquo;Previous
       </button>
-      <div v-for="p in pageCount" :key="p" class="page-item">
-        <router-link :to="`/search?page=${p}`"
-          ><button class="page-item">{{ p }}</button></router-link
-        >
-      </div>
-      <button class="page-item" :disabled="pageCount >= 0" @click="prevPage">
-        &raquo;
-      </button>
+      <button class="btn btn-primary" @click="nextPage">Next&raquo;</button>
     </div>
   </div>
 </template>
@@ -108,16 +113,11 @@ import { ForkTypes, ResultTypes } from "ObjTypes/ObjTypes";
 
 export default Vue.extend({
   components: { Search },
-  props: {
-    size: {
-      type: Number,
-      default: 10,
-    },
-  },
+  props: {},
   data(): ResultTypes {
     return {
       forks: [],
-      page: 0,
+      page: 1,
     };
   },
   methods: {
@@ -132,15 +132,10 @@ export default Vue.extend({
     },
   },
   computed: {
-    pageCount(): number {
-      let l = this.forks.length,
-        s = this.size;
-      return Math.ceil(l / s);
-    },
-    paginatedData(): ForkTypes[] {
-      const start = this.page * this.pageCount;
-      const end = start + this.size;
-      return this.forks.slice(start, end);
+    isPrevButtonDisabled() {
+      if (this.$route.query.page === undefined) return true;
+      else if (this.page == 1) return true;
+      return false;
     },
   },
 });
